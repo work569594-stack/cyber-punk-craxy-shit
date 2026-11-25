@@ -1,0 +1,156 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'work569594@gmail.com'
+      );
+    }
+
+    function isValidStringList(arr, maxLen) {
+      return arr is list && arr.size() <= maxLen && (arr.size() == 0 || (arr[0] is string && arr[0].size() <= 128));
+    }
+
+    function isValidUserSession(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'sessionId', 'accessLevel',
+          'discoveredNodes', 'connectedNodes', 'discoveredFiles', 'openedFiles',
+          'unlockedDirs', 'unlockedCommands', 'completedMissions', 'recoveredEvidence',
+          'evidenceConnections', 'solvedPuzzles', 'unlockedRegions', 'encounteredAnomalies',
+          'narrativeChoices', 'totalTimeSeconds', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'sessionId', 'accessLevel',
+          'discoveredNodes', 'connectedNodes', 'discoveredFiles', 'openedFiles',
+          'unlockedDirs', 'unlockedCommands', 'completedMissions', 'recoveredEvidence',
+          'evidenceConnections', 'solvedPuzzles', 'unlockedRegions', 'encounteredAnomalies',
+          'narrativeChoices', 'endingReached', 'totalTimeSeconds', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && data.ownerId == request.auth.uid
+        && data.sessionId is string && data.sessionId.size() >= 3 && data.sessionId.size() <= 64
+        && data.accessLevel is int && data.accessLevel >= 0 && data.accessLevel <= 6
+        && isValidStringList(data.discoveredNodes, 200)
+        && isValidStringList(data.connectedNodes, 200)
+        && isValidStringList(data.discoveredFiles, 200)
+        && isValidStringList(data.openedFiles, 200)
+        && isValidStringList(data.unlockedDirs, 50)
+        && isValidStringList(data.unlockedCommands, 100)
+        && isValidStringList(data.completedMissions, 50)
+        && isValidStringList(data.recoveredEvidence, 100)
+        && data.evidenceConnections is list && data.evidenceConnections.size() <= 100
+        && isValidStringList(data.solvedPuzzles, 50)
+        && isValidStringList(data.unlockedRegions, 20)
+        && isValidStringList(data.encounteredAnomalies, 100)
+        && data.narrativeChoices is map && data.narrativeChoices.size() <= 30
+        && (!('endingReached' in data) || data.endingReached == null || (data.endingReached is string && data.endingReached.size() <= 64))
+        && data.totalTimeSeconds is int && data.totalTimeSeconds >= 0 && data.totalTimeSeconds <= 315360000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDossier(data, userId) {
+      return data.keys().hasAll(['ownerId', 'dossierCode', 'accessLevel', 'summary', 'createdAt'])
+        && data.keys().hasOnly(['ownerId', 'dossierCode', 'accessLevel', 'endingReached', 'summary', 'createdAt'])
+        && data.ownerId is string && data.ownerId == userId && data.ownerId == request.auth.uid
+        && data.dossierCode is string && data.dossierCode.size() >= 3 && data.dossierCode.size() <= 64
+        && data.accessLevel is int && data.accessLevel >= 0 && data.accessLevel <= 6
+        && (!('endingReached' in data) || data.endingReached == null || (data.endingReached is string && data.endingReached.size() <= 64))
+        && data.summary is string && data.summary.size() <= 4000
+        && data.createdAt is timestamp;
+    }
+
+    function isValidOverride(data) {
+      return data.keys().hasAll(['kind', 'entityId', 'title', 'payload', 'published', 'authorUid', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['kind', 'entityId', 'title', 'payload', 'published', 'authorUid', 'createdAt', 'updatedAt'])
+        && data.kind in ['node', 'file', 'transmission', 'incident', 'event']
+        && isValidId(data.entityId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && data.payload is map && data.payload.size() <= 30
+        && data.published is bool
+        && data.authorUid is string && data.authorUid == request.auth.uid && data.authorUid.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /test/connection {
+      allow get: if true;
+    }
+
+    match /admins/{uid} {
+      allow get: if isValidId(uid) && isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+
+    match /sessions/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isSignedIn() && (existing().ownerId == request.auth.uid || isAdmin());
+      allow create: if isValidId(userId) && isVerified() && isValidUserSession(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isVerified() && isValidUserSession(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'sessionId', 'accessLevel', 'discoveredNodes', 'connectedNodes',
+          'discoveredFiles', 'openedFiles', 'unlockedDirs', 'unlockedCommands',
+          'completedMissions', 'recoveredEvidence', 'evidenceConnections',
+          'solvedPuzzles', 'unlockedRegions', 'encounteredAnomalies',
+          'narrativeChoices', 'endingReached', 'totalTimeSeconds', 'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) && isVerified() && (request.auth.uid == userId || isAdmin());
+
+      match /dossiers/{dossierId} {
+        allow get: if isValidId(userId) && isValidId(dossierId) && isSignedIn() && (request.auth.uid == userId || isAdmin());
+        allow list: if isValidId(userId) && isSignedIn() && (existing().ownerId == request.auth.uid || isAdmin());
+        allow create: if isValidId(userId) && isValidId(dossierId) && isVerified()
+          && exists(/databases/$(database)/documents/sessions/$(userId))
+          && get(/databases/$(database)/documents/sessions/$(userId)).data.ownerId == request.auth.uid
+          && isValidDossier(incoming(), userId)
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isValidId(userId) && isValidId(dossierId) && isVerified() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    match /universe_overrides/{overrideId} {
+      allow get: if isValidId(overrideId) && (existing().published == true || isAdmin());
+      allow list: if existing().published == true || isAdmin();
+      allow create: if isValidId(overrideId) && isAdmin() && isValidOverride(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(overrideId) && isAdmin() && isValidOverride(incoming())
+        && incoming().authorUid == existing().authorUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['kind', 'entityId', 'title', 'payload', 'published', 'updatedAt']);
+      allow delete: if isValidId(overrideId) && isAdmin();
+    }
+  }
+}

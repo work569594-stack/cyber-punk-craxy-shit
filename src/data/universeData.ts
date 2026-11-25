@@ -1,0 +1,35 @@
+import { INITIAL_FILES, DIRECTORIES } from './universeFiles';
+import { EXTRA_FILES } from './universeFilesExtra';
+import { GHOST_EDGES, GHOST_NODES, GHOST_REGIONS } from './universeNetwork';
+import {
+  ACCESS_LEVELS,
+  COMMAND_CATALOG,
+  ENDINGS,
+  EVIDENCE_ITEMS,
+  INCIDENTS,
+  OPERATIONS,
+  PERSONNEL_PROFILES,
+  PUZZLES,
+  SYSTEM_EVENTS,
+  TRANSMISSIONS,
+} from './universeNarrative';
+import { VirtualFile } from '../types/universe';
+
+export const ALL_FILES: VirtualFile[] = [...INITIAL_FILES, ...EXTRA_FILES];
+
+export {
+  DIRECTORIES,
+  GHOST_REGIONS,
+  GHOST_NODES,
+  GHOST_EDGES,
+  ACCESS_LEVELS,
+  INCIDENTS,
+  EVIDENCE_ITEMS,
+  PERSONNEL_PROFILES,
+  TRANSMISSIONS,
+  PUZZLES,
+  OPERATIONS,
+  COMMAND_CATALOG,
+  SYSTEM_EVENTS,
+  ENDINGS,
+};

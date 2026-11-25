@@ -1,0 +1,90 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --ra-black: #020403;
+    --ra-deep: #000000;
+    --ra-panel: #071009;
+    --ra-phosphor: #00ff41;
+    --ra-muted-green: #0a5728;
+    --ra-ghost: #506454;
+    --ra-amber: #c68a2a;
+    --ra-red: #ff2424;
+    --ra-white: #d6e2d8;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    background-color: #020403;
+    color: #d6e2d8;
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  }
+}
+
+.font-editorial {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-terminal {
+  font-family: 'JetBrains Mono', 'Space Mono', monospace;
+}
+
+.font-mono-tabular {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Subtle CRT scanline overlay (disabled under reduced-motion or user preference) */
+.crt-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 255, 65, 0.025) 0px,
+    rgba(0, 255, 65, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.crt-vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+}
+
+.phosphor-glow {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.35);
+}
+
+.amber-glow {
+  text-shadow: 0 0 10px rgba(198, 138, 42, 0.35);
+}
+
+.red-glow {
+  text-shadow: 0 0 12px rgba(255, 36, 36, 0.45);
+}
+
+/* Custom restrained scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020403;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(80, 100, 84, 0.35);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 65, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt-scanlines {
+    display: none;
+  }
+}

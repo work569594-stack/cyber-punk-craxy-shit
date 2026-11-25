@@ -1,0 +1,221 @@
+{
+  "entities": {
+    "UserSession": {
+      "title": "UserSession",
+      "description": "Persistent ROOT ACCESS : 07 universe discovery and progression state for a signed-in user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64
+        },
+        "accessLevel": {
+          "type": "integer"
+        },
+        "discoveredNodes": {
+          "type": "array"
+        },
+        "connectedNodes": {
+          "type": "array"
+        },
+        "discoveredFiles": {
+          "type": "array"
+        },
+        "openedFiles": {
+          "type": "array"
+        },
+        "unlockedDirs": {
+          "type": "array"
+        },
+        "unlockedCommands": {
+          "type": "array"
+        },
+        "completedMissions": {
+          "type": "array"
+        },
+        "recoveredEvidence": {
+          "type": "array"
+        },
+        "evidenceConnections": {
+          "type": "array"
+        },
+        "solvedPuzzles": {
+          "type": "array"
+        },
+        "unlockedRegions": {
+          "type": "array"
+        },
+        "encounteredAnomalies": {
+          "type": "array"
+        },
+        "narrativeChoices": {
+          "type": "object"
+        },
+        "endingReached": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "totalTimeSeconds": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "sessionId",
+        "accessLevel",
+        "discoveredNodes",
+        "connectedNodes",
+        "discoveredFiles",
+        "openedFiles",
+        "unlockedDirs",
+        "unlockedCommands",
+        "completedMissions",
+        "recoveredEvidence",
+        "evidenceConnections",
+        "solvedPuzzles",
+        "unlockedRegions",
+        "encounteredAnomalies",
+        "narrativeChoices",
+        "totalTimeSeconds",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SessionDossier": {
+      "title": "SessionDossier",
+      "description": "Exported intelligence dossier snapshot generated from a user session.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "dossierCode": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64
+        },
+        "accessLevel": {
+          "type": "integer"
+        },
+        "endingReached": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "dossierCode",
+        "accessLevel",
+        "summary",
+        "createdAt"
+      ]
+    },
+    "UniverseOverride": {
+      "title": "UniverseOverride",
+      "description": "Admin-managed fictional nodes, files, transmissions, or incidents layered onto the universe.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["node", "file", "transmission", "incident", "event"]
+        },
+        "entityId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "payload": {
+          "type": "object"
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "authorUid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "kind",
+        "entityId",
+        "title",
+        "payload",
+        "published",
+        "authorUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Protected administrator lookup record.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        }
+      },
+      "required": ["role"]
+    }
+  },
+  "firestore": {
+    "/sessions/{userId}": {
+      "schema": { "$ref": "#/entities/UserSession" },
+      "description": "User-owned ROOT ACCESS : 07 session progress."
+    },
+    "/sessions/{userId}/dossiers/{dossierId}": {
+      "schema": { "$ref": "#/entities/SessionDossier" },
+      "description": "Generated session intelligence dossiers owned by the user."
+    },
+    "/universe_overrides/{overrideId}": {
+      "schema": { "$ref": "#/entities/UniverseOverride" },
+      "description": "Admin CMS universe overrides published to explorers."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Admin authorization registry."
+    }
+  }
+}

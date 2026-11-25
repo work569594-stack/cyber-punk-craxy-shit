@@ -1,0 +1,8 @@
+{
+  "name": "ROOT ACCESS : 07",
+  "description": "An interconnected digital universe combining an interactive OS terminal, 3D Ghostnet network exploration, and Blackbox incident investigation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
